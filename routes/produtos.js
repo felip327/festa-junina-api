@@ -1,22 +1,24 @@
 const express = require('express');
-const router = express.Router();
+const router = express.Router(); // É aqui que a variável 'router' nasce!
+const supabase = require('../data/supabase'); // Puxando a conexão com o banco
 
-const produtosJuninos = [
-    { id: 1, nome: 'Kit Bandeirinhas de Chita 10m', preco: 45.90, categoria_id: 1 },
-    { id: 2, nome: 'Tiara com Mini Chapéu de Palha', preco: 18.50, categoria_id: 2 },
-    { id: 3, nome: 'Gravata Caipira Decorada', preco: 15.00, categoria_id: 2 },
-    { id: 4, nome: 'Centro de Mesa Fogueira de EVA', preco: 22.00, categoria_id: 1 },
-    { id: 5, nome: 'Mini Marmitinha de Doce de Abóbora', preco: 8.50, categoria_id: 3 }
-];
+// Usando 'router' no singular
+router.get('/', async (req, res, next) => {
+    try {
+        // Vai no Supabase e busca todos os produtos da tabela produtos1
+        const { data: produtos, error } = await supabase
+            .from('produtos1')
+            .select('*, categorias1(nome)'); 
 
-router.get('/', (req, res) => {
-    res.json(produtosJuninos);
-});
+        if (error) {
+            throw error; 
+        }
 
-router.get('/:id', (req, res) => {
-    const produto = produtosJuninos.find(p => p.id === parseInt(req.params.id));
-    if (!produto) return res.status(404).json({ mensagem: 'Produto não encontrado, sô!' });
-    res.json(produto);
+        res.json(produtos); 
+
+    } catch (error) {
+        next(error);
+    }
 });
 
 module.exports = router;
