@@ -1,21 +1,45 @@
 const express = require('express');
 const router = express.Router();
+const supabase = require('../data/supabase');
 
-// Rota para criar um novo pedido
-router.post('/', (req, res) => {
-    const { cliente, itens, total } = req.body;
-    
-    // Aqui você inseriria no Supabase
-    
-    res.status(201).json({
-        mensagem: 'Pedido realizado com sucesso! A festança tá garantida.',
-        pedido: {
-            id: Math.floor(Math.random() * 1000),
-            cliente,
-            status: 'Aguardando Pagamento',
-            total
+// Criar pedido
+router.post('/', async (req, res) => {
+    try {
+        const { cliente, itens, total } = req.body;
+
+        // Salvar pedido no Supabase
+        const { data, error } = await supabase
+            .from('pedidos1')
+            .insert([
+                {
+                    cliente_nome: cliente.nome,
+                    cliente_telefone: cliente.telefone,
+                    cliente_endereco: cliente.endereco,
+                    itens,
+                    total,
+                    status: 'Aguardando Pagamento'
+                }
+            ])
+            .select();
+
+        if (error) {
+            throw error;
         }
-    });
+
+        res.status(201).json({
+            sucesso: true,
+            mensagem: 'Pedido realizado com sucesso!',
+            pedido: data[0]
+        });
+
+    } catch (error) {
+        console.error(error);
+
+        res.status(500).json({
+            sucesso: false,
+            erro: error.message
+        });
+    }
 });
 
 module.exports = router;
